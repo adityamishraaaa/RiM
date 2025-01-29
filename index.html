@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Welcome - RiM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container screen1">
+    <img src="logo.png" alt="App Logo" class="logo" />
+    <p>
+      Hello there! My name is RiM. I am here to assess your physical well-being
+      based on your lifestyle habits and provide you with personalised
+      recommendations in order to improve it.<br /><br />
+      I use federated learning and thus do not share your data and keep it 
+      locally in your device.
+    </p>
+    <button id="continue-btn" class="btn">Continue</button>
+  </div>
+
+  <script>
+    // On page load, check if userData already exists in localStorage.
+    // If yes, skip directly to tracker.html (Screen 3).
+    window.addEventListener('load', () => {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        // User data found, skip screens 1 & 2
+        window.location.href = 'tracker.html';
+      } else {
+        // Otherwise, show the continue button flow
+        const btn = document.getElementById('continue-btn');
+        btn.addEventListener('click', () => {
+          window.location.href = 'user-details.html';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

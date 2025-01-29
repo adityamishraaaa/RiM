@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>User Details - RiM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container screen2">
+    <h2>Please enter your details</h2>
+    <form id="user-form">
+      <label for="name">Name:</label>
+      <input type="text" id="name" required />
+
+      <label for="roll">Roll Number:</label>
+      <input type="text" id="roll" required />
+
+      <label for="email">Email Address:</label>
+      <input type="email" id="email" required />
+
+      <label for="age">Age (in years):</label>
+      <input type="number" id="age" min="1" required />
+
+      <label for="height">Height (cm):</label>
+      <input type="number" id="height" min="1" required />
+
+      <label for="weight">Weight (kg):</label>
+      <input type="number" id="weight" min="1" required />
+
+      <button class="btn" type="submit">Continue</button>
+    </form>
+  </div>
+
+  <script>
+    // On load, check if userData already exists:
+    // If present, skip to tracker immediately.
+    window.addEventListener('load', () => {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        window.location.href = 'tracker.html';
+      }
+    });
+
+    // Handle form submission
+    const userForm = document.getElementById('user-form');
+    userForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Collect form data
+      const name = document.getElementById('name').value.trim();
+      const roll = document.getElementById('roll').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const age = document.getElementById('age').value.trim();
+      const height = document.getElementById('height').value.trim();
+      const weight = document.getElementById('weight').value.trim();
+
+      // Save to localStorage
+      const dataObj = { name, roll, email, age, height, weight };
+      localStorage.setItem('userData', JSON.stringify(dataObj));
+
+      // Redirect to Screen 3 (tracker)
+      window.location.href = 'tracker.html';
+    });
+  </script>
+</body>
+</html>

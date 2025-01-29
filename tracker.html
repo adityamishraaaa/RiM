@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta 
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Health Tracker - RiM</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container screen3">
+    <header>
+      <h1>RiM: Record, Improve and Maintain</h1>
+    </header>
+    <main>
+      <section class="card">
+        <h2>Step Count</h2>
+        <p id="step-count">0</p>
+      </section>
+
+      <section class="card">
+        <h2>Distance Traveled (km)</h2>
+        <p id="distance-traveled">0.00</p>
+      </section>
+
+      <section class="card">
+        <h2>Sleep Hours</h2>
+        <p id="sleep-hours">0</p>
+        <div class="sleep-btns">
+          <button id="start-sleep-btn">Start Sleep</button>
+          <button id="stop-sleep-btn" disabled>Stop Sleep</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Redirect if no userData found
+    window.addEventListener('load', () => {
+      const userData = localStorage.getItem('userData');
+      if (!userData) {
+        // If user data is not stored, go back to screen 1
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>

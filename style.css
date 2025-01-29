@@ -1,0 +1,132 @@
+/* Basic resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #f06, #4a90e2);
+  min-height: 100vh;
+  margin: 0;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Screen 1 */
+.screen1 {
+  text-align: center;
+  padding: 40px;
+}
+
+.logo {
+  width: 150px;
+  margin-bottom: 20px;
+}
+
+.screen1 p {
+  margin-top: 20px;
+  line-height: 1.5;
+}
+
+/* Screen 2 */
+.screen2 form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.screen2 label {
+  font-weight: bold;
+}
+
+.screen2 input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.btn {
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn:hover {
+  background-color: #45a049;
+}
+
+/* Screen 3 */
+.screen3 header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.screen3 header h1 {
+  margin: 0;
+}
+
+.screen3 main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+  color: #4caf50;
+}
+
+.sleep-btns {
+  margin-top: 10px;
+}
+
+.sleep-btns button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sleep-btns button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .card p {
+    font-size: 1.5rem;
+  }
+}
