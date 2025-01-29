@@ -8,28 +8,59 @@
   />
   <title>User Details - RiM</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* You can move this into styles.css if you like */
+    .field {
+      display: flex;
+      flex-direction: column; /* Label and input on separate lines */
+      margin-bottom: 15px;    /* Vertical spacing between fields */
+    }
+    
+    .field label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .field input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
   <div class="container screen2">
     <h2>Please enter your details</h2>
     <form id="user-form">
-      <label for="name">Name:</label>
-      <input type="text" id="name" required />
+      <div class="field">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required />
+      </div>
 
-      <label for="roll">Roll Number:</label>
-      <input type="text" id="roll" required />
+      <div class="field">
+        <label for="roll">Roll Number:</label>
+        <input type="text" id="roll" required />
+      </div>
 
-      <label for="email">Email Address:</label>
-      <input type="email" id="email" required />
+      <div class="field">
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" required />
+      </div>
 
-      <label for="age">Age (in years):</label>
-      <input type="number" id="age" min="1" required />
+      <div class="field">
+        <label for="age">Age (in years):</label>
+        <input type="number" id="age" min="1" required />
+      </div>
 
-      <label for="height">Height (cm):</label>
-      <input type="number" id="height" min="1" required />
+      <div class="field">
+        <label for="height">Height (cm):</label>
+        <input type="number" id="height" min="1" required />
+      </div>
 
-      <label for="weight">Weight (kg):</label>
-      <input type="number" id="weight" min="1" required />
+      <div class="field">
+        <label for="weight">Weight (kg):</label>
+        <input type="number" id="weight" min="1" required />
+      </div>
 
       <button class="btn" type="submit">Continue</button>
     </form>
