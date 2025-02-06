@@ -21,10 +21,25 @@
       margin-bottom: 5px;
     }
     
-    .field input {
+    .field input, .field select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
+    }
+
+    /* Simple styling for the "i" info icon */
+    .info {
+      display: inline-block;
+      background-color: #eee;
+      color: #333;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 18px;
+      font-weight: bold;
+      margin-left: 5px;
+      cursor: help; /* helps indicate that it's an info/tooltip icon */
     }
   </style>
 </head>
@@ -52,13 +67,43 @@
         <input type="number" id="age" min="1" required />
       </div>
 
+      <!-- GENDER DROPDOWN -->
       <div class="field">
-        <label for="height">Height (cm):</label>
+        <label for="gender">Gender:</label>
+        <select id="gender" required>
+          <option value="">Select</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+
+      <!-- HEIGHT WITH INFO ICON -->
+      <div class="field">
+        <label for="height">
+          Height (cm)
+          <span 
+            class="info" 
+            title="If you are unsure about your height and weight, kindly visit the institute health center or our lab (305, 4D Building) for measurement."
+          >
+            i
+          </span>
+          :
+        </label>
         <input type="number" id="height" min="1" required />
       </div>
 
+      <!-- WEIGHT WITH INFO ICON -->
       <div class="field">
-        <label for="weight">Weight (kg):</label>
+        <label for="weight">
+          Weight (kg)
+          <span 
+            class="info" 
+            title="If you are unsure about your height and weight, kindly visit the institute health center or our lab (305, 4D Building) for measurement."
+          >
+            i
+          </span>
+          :
+        </label>
         <input type="number" id="weight" min="1" required />
       </div>
 
@@ -86,11 +131,12 @@
       const roll = document.getElementById('roll').value.trim();
       const email = document.getElementById('email').value.trim();
       const age = document.getElementById('age').value.trim();
+      const gender = document.getElementById('gender').value;
       const height = document.getElementById('height').value.trim();
       const weight = document.getElementById('weight').value.trim();
 
       // Save to localStorage
-      const dataObj = { name, roll, email, age, height, weight };
+      const dataObj = { name, roll, email, age, gender, height, weight };
       localStorage.setItem('userData', JSON.stringify(dataObj));
 
       // Redirect to Screen 3 (tracker)
