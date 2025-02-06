@@ -21,7 +21,8 @@
       margin-bottom: 5px;
     }
     
-    .field input {
+    .field input,
+    .field select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -62,6 +63,17 @@
         <input type="number" id="weight" min="1" required />
       </div>
 
+      <!-- New field for gender -->
+      <div class="field">
+        <label for="gender">Gender:</label>
+        <select id="gender" required>
+          <option value="" disabled selected>-- Select your gender --</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <!-- End gender field -->
+
       <button class="btn" type="submit">Continue</button>
     </form>
   </div>
@@ -88,9 +100,10 @@
       const age = document.getElementById('age').value.trim();
       const height = document.getElementById('height').value.trim();
       const weight = document.getElementById('weight').value.trim();
+      const gender = document.getElementById('gender').value;
 
       // Save to localStorage
-      const dataObj = { name, roll, email, age, height, weight };
+      const dataObj = { name, roll, email, age, height, weight, gender };
       localStorage.setItem('userData', JSON.stringify(dataObj));
 
       // Redirect to Screen 3 (tracker)
