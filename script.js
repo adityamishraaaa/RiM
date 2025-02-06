@@ -237,7 +237,7 @@ function setupNightlyMealCheck() {
     const minutes = now.getMinutes();
 
     // If it's exactly 22:00 (10 PM) and we haven't shown popup today
-    if (hours === 22 && minutes === 0 && !hasShownMealPopupToday) {
+    if (hours === 18 && minutes === 15 && !hasShownMealPopupToday) {
       showMealPopup();
       hasShownMealPopupToday = true;
     }
