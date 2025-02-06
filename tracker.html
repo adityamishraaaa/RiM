@@ -33,8 +33,60 @@
           <button id="stop-sleep-btn" disabled>Stop Sleep</button>
         </div>
       </section>
+
+      <!-- NEW: Sedentary Hours Section -->
+      <section class="card">
+        <h2>Sedentary Hours</h2>
+        <p id="sedentary-hours">0.0</p>
+      </section>
+      <!-- End Sedentary Section -->
+
     </main>
   </div>
+
+  <!-- Hidden Meal Popup (shown at 10 PM) -->
+  <div 
+    id="meal-popup" 
+    style="display: none; 
+           position: fixed; 
+           top: 50%; 
+           left: 50%; 
+           transform: translate(-50%, -50%);
+           background: #fff; 
+           padding: 20px; 
+           border-radius: 8px; 
+           box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+           z-index: 999;"
+  >
+    <h2>Today’s Meals</h2>
+    <p>Did you take your breakfast today?</p>
+    <label>
+      <input type="radio" name="breakfast" value="yes" checked /> Yes
+    </label>
+    <label>
+      <input type="radio" name="breakfast" value="no" /> No
+    </label>
+
+    <p>Did you take your lunch today?</p>
+    <label>
+      <input type="radio" name="lunch" value="yes" checked /> Yes
+    </label>
+    <label>
+      <input type="radio" name="lunch" value="no" /> No
+    </label>
+
+    <p>Did you take your dinner today?</p>
+    <label>
+      <input type="radio" name="dinner" value="yes" checked /> Yes
+    </label>
+    <label>
+      <input type="radio" name="dinner" value="no" /> No
+    </label>
+
+    <br /><br />
+    <button id="meal-popup-submit">Submit</button>
+  </div>
+  <!-- End Meal Popup -->
 
   <script src="script.js"></script>
   <script>
