@@ -1,100 +1,80 @@
 /****************************************************
  * script.js
- * Shared or mainly used by tracker.html
  ****************************************************/
 
 /* DOM References (tracker.html) */
 const stepCountEl = document.getElementById('step-count');
 const distanceTraveledEl = document.getElementById('distance-traveled');
+const sedentaryEl = document.getElementById('sedentary-hours');
 const sleepHoursEl = document.getElementById('sleep-hours');
 
-const startSleepBtn = document.getElementById('start-sleep-btn');
-const stopSleepBtn = document.getElementById('stop-sleep-btn');
-
-// Sedentary UI (for the "Sedentary Hours" card)
-const sedentaryEl = document.getElementById('sedentary-hours');
-
-/* Variables */
-let stepCount = 0;
-let distanceTraveled = 0; // in km
+/****************************************************
+ * DAILY Variables
+ * We reset these to 0 each day after saving to CSV
+ ****************************************************/
+let dailyStepCount = 0;
+let dailyDistance = 0;           // in km
+let dailySedentaryMinutes = 0;
+let dailySleepHours = 0;         // auto-detected
+// For step detection
 let previousAcceleration = { x: null, y: null, z: null };
 let isStepDetected = false;
 
-// Sleep
-let sleepStartTime = null;
-let totalSleepHours = 0;
-
-// Sedentary
+// For sedation
 let lastActiveTime = Date.now();
-let sedentaryMinutes = 0;
-let checkSedentaryIntervalId = null;
-const SEDENTARY_THRESHOLD_MINUTES = 60; // e.g., 60 min = 1 hour
 
-// Constants for step counting
-const stepThreshold = 1.2;
-const stepLength = 0.8; // meters
+// For auto-sleep detection
+// We track "continuous inactivity chunks" in the 10 PM -> 10 AM window
+let sleepCandidateActive = false;      // Are we currently in an inactivity chunk?
+let sleepCandidateMinutes = 0;         // Length (in min) of current inactivity chunk
+const SLEEP_THRESHOLD_MINUTES = 180;   // 3 hours
+const SLEEP_WINDOW_START = 22;         // 10 PM
+const SLEEP_WINDOW_END = 10;           // 10 AM
 
 /****************************************************
- * 1) Load/Save Health Data
+ * 1) Load/Save daily data from localStorage
  ****************************************************/
-function loadHealthDataFromStorage() {
-  const savedStepCount = localStorage.getItem('stepCount');
-  const savedDistance = localStorage.getItem('distanceTraveled');
-  const savedSleepHours = localStorage.getItem('totalSleepHours');
-  const savedSleepStart = localStorage.getItem('sleepStartTime');
+function loadDailyDataFromStorage() {
+  const storedDaily = localStorage.getItem('dailyData');
+  if (!storedDaily) return; // Nothing saved yet
 
-  // Sedentary
-  const savedSedentary = localStorage.getItem('sedentaryMinutes');
+  const data = JSON.parse(storedDaily);
+  dailyStepCount = data.dailyStepCount || 0;
+  dailyDistance = data.dailyDistance || 0;
+  dailySedentaryMinutes = data.dailySedentaryMinutes || 0;
+  dailySleepHours = data.dailySleepHours || 0;
 
-  if (savedStepCount !== null) {
-    stepCount = parseInt(savedStepCount, 10);
-    if (stepCountEl) stepCountEl.textContent = stepCount.toString();
-  }
-  if (savedDistance !== null) {
-    distanceTraveled = parseFloat(savedDistance);
-    if (distanceTraveledEl) {
-      distanceTraveledEl.textContent = distanceTraveled.toFixed(2);
-    }
-  }
-  if (savedSleepHours !== null) {
-    totalSleepHours = parseFloat(savedSleepHours);
-    if (sleepHoursEl) {
-      sleepHoursEl.textContent = totalSleepHours.toFixed(1);
-    }
-  }
-  if (savedSleepStart !== null) {
-    sleepStartTime = new Date(savedSleepStart);
-    if (sleepStartTime) {
-      if (startSleepBtn) startSleepBtn.disabled = true;
-      if (stopSleepBtn) stopSleepBtn.disabled = false;
-    }
-  }
-
-  if (savedSedentary !== null) {
-    sedentaryMinutes = parseInt(savedSedentary, 10);
-    updateSedentaryUI(); // Update the display
-  }
+  updateUI();
 }
 
-function saveHealthDataToStorage() {
-  localStorage.setItem('stepCount', stepCount.toString());
-  localStorage.setItem('distanceTraveled', distanceTraveled.toString());
-  localStorage.setItem('totalSleepHours', totalSleepHours.toString());
+function saveDailyDataToStorage() {
+  const toStore = {
+    dailyStepCount,
+    dailyDistance,
+    dailySedentaryMinutes,
+    dailySleepHours
+  };
+  localStorage.setItem('dailyData', JSON.stringify(toStore));
+}
 
-  if (sleepStartTime) {
-    localStorage.setItem('sleepStartTime', sleepStartTime.toString());
-  } else {
-    localStorage.removeItem('sleepStartTime');
-  }
+function updateUI() {
+  if (stepCountEl) stepCountEl.textContent = dailyStepCount.toString();
+  if (distanceTraveledEl) distanceTraveledEl.textContent = dailyDistance.toFixed(2);
 
-  // Sedentary
-  localStorage.setItem('sedentaryMinutes', sedentaryMinutes.toString());
+  // Sedentary in hours
+  const sedHours = (dailySedentaryMinutes / 60).toFixed(1);
+  if (sedentaryEl) sedentaryEl.textContent = sedHours;
+
+  // Sleep (auto-detected) in hours
+  if (sleepHoursEl) sleepHoursEl.textContent = dailySleepHours.toFixed(1);
 }
 
 /****************************************************
  * 2) Step Counting via DeviceMotion
  ****************************************************/
-// Request permission (iOS)
+const stepThreshold = 1.2; // for motion magnitude
+const stepLength = 0.8;    // meters
+
 function requestMotionPermission() {
   if (
     typeof DeviceMotionEvent !== 'undefined' &&
@@ -120,8 +100,6 @@ function handleMotion(event) {
   if (!acceleration) return;
 
   const { x, y, z } = acceleration;
-
-  // If we already have previous acceleration, compare
   if (
     previousAcceleration.x !== null &&
     previousAcceleration.y !== null &&
@@ -133,100 +111,100 @@ function handleMotion(event) {
 
     const magnitude = deltaX + deltaY + deltaZ;
     if (magnitude > stepThreshold && !isStepDetected) {
-      stepCount++;
-      lastActiveTime = Date.now(); // Reset inactivity time
-      updateStepUI();
+      // A step was detected
+      dailyStepCount++;
+      lastActiveTime = Date.now(); // user is active
+      dailyDistance = (dailyStepCount * stepLength) / 1000; // km
+
+      // Also break any "sleepCandidate" chunk if it was active
+      if (sleepCandidateActive) {
+        finalizeSleepCandidate(); // user moved, finalize chunk
+      }
+
+      updateUI();
+      saveDailyDataToStorage();
 
       isStepDetected = true;
-      setTimeout(() => {
-        isStepDetected = false;
-      }, 300);
+      setTimeout(() => { isStepDetected = false; }, 300);
     }
   }
-
   previousAcceleration = { x, y, z };
 }
 
-function updateStepUI() {
-  if (stepCountEl) stepCountEl.textContent = stepCount.toString();
-  distanceTraveled = (stepCount * stepLength) / 1000; // in km
-  if (distanceTraveledEl) {
-    distanceTraveledEl.textContent = distanceTraveled.toFixed(2);
-  }
-  saveHealthDataToStorage();
-}
-
 /****************************************************
- * 3) Sleep Tracking
+ * 3) Sedentary + Sleep Checking
  ****************************************************/
-function startSleepTracking() {
-  sleepStartTime = new Date();
-  if (startSleepBtn) startSleepBtn.disabled = true;
-  if (stopSleepBtn) stopSleepBtn.disabled = false;
-  saveHealthDataToStorage();
-}
-
-function stopSleepTracking() {
-  if (!sleepStartTime) return;
-  const now = new Date();
-  const diffMs = now - sleepStartTime;
-  const diffHours = diffMs / (1000 * 60 * 60);
-
-  totalSleepHours += diffHours;
-  sleepStartTime = null;
-
-  if (sleepHoursEl) {
-    sleepHoursEl.textContent = totalSleepHours.toFixed(1);
-  }
-  if (startSleepBtn) startSleepBtn.disabled = false;
-  if (stopSleepBtn) stopSleepBtn.disabled = true;
-  saveHealthDataToStorage();
-}
-
-/****************************************************
- * 4) Sedentary Tracking
- ****************************************************/
-function checkSedentaryStatus() {
+function checkInactivity() {
+  // 1) Sedentary
   const now = Date.now();
   const diffMinutes = (now - lastActiveTime) / (1000 * 60);
 
-  // Example: if user hasn't moved for each full minute, count that as sedentary
-  // Or you can only add 1 after hitting SEDENTARY_THRESHOLD_MINUTES, etc.
+  // If user hasn't moved for at least 1 minute, add that to sedentary
   if (diffMinutes >= 1) {
-    // Increment by 1 minute of sedentary for each minute that passes
-    // (Simplistic approach — you'd refine this logic for partial minutes, etc.)
-    sedentaryMinutes += 1;
-    lastActiveTime = now; // reset so we don't keep adding
-    updateSedentaryUI();
-    saveHealthDataToStorage();
+    const add = Math.floor(diffMinutes); // e.g., if 2 minutes have passed
+    dailySedentaryMinutes += add;
+    lastActiveTime = now; // reset reference
+    updateUI();
+    saveDailyDataToStorage();
+  }
+
+  // 2) Sleep detection (only if in [22..24] or [0..10] hours range)
+  const currentHour = new Date().getHours();
+  const inSleepWindow = isInSleepWindow(currentHour);
+
+  if (inSleepWindow) {
+    // Check if user was inactive in the last minute (same condition as above)
+    // If diffMinutes >= 1 => user didn't move in that minute
+    // We'll accumulate a continuous chunk
+    if (!sleepCandidateActive) {
+      // Start a new chunk
+      sleepCandidateActive = true;
+      sleepCandidateMinutes = 0;
+    }
+
+    // Since we do once per minute, we can add 1 to our chunk
+    sleepCandidateMinutes += 1;
+  } else {
+    // If we're out of the sleep window but a chunk was active, finalize it
+    if (sleepCandidateActive) {
+      finalizeSleepCandidate();
+    }
   }
 }
 
-function updateSedentaryUI() {
-  // Convert minutes to hours for display if desired
-  const hours = (sedentaryMinutes / 60).toFixed(1);
-  if (sedentaryEl) {
-    sedentaryEl.textContent = hours; // e.g., "3.5" hours
+function isInSleepWindow(hour) {
+  // Sleep window is 22:00 -> 24:00 and 0:00 -> 10:00
+  // So if hour >= 22 OR hour < 10
+  return (hour >= SLEEP_WINDOW_START || hour < SLEEP_WINDOW_END);
+}
+
+// Called when user moves or we exit the sleep window
+function finalizeSleepCandidate() {
+  // If we have 180+ min, add to dailySleepHours
+  if (sleepCandidateMinutes >= SLEEP_THRESHOLD_MINUTES) {
+    dailySleepHours += sleepCandidateMinutes / 60.0; // convert minutes -> hours
   }
+  // Reset
+  sleepCandidateActive = false;
+  sleepCandidateMinutes = 0;
+
+  updateUI();
+  saveDailyDataToStorage();
 }
 
 /****************************************************
- * 5) Nightly Meal Popup (10 PM)
+ * 4) Meal Popup (10 PM)
  ****************************************************/
 let hasShownMealPopupToday = false;
 
 function showMealPopup() {
   const popup = document.getElementById('meal-popup');
-  if (popup) {
-    popup.style.display = 'block';
-  }
+  if (popup) popup.style.display = 'block';
 }
 
 function hideMealPopup() {
   const popup = document.getElementById('meal-popup');
-  if (popup) {
-    popup.style.display = 'none';
-  }
+  if (popup) popup.style.display = 'none';
 }
 
 function setupNightlyMealCheck() {
@@ -236,26 +214,46 @@ function setupNightlyMealCheck() {
     const hours = now.getHours();
     const minutes = now.getMinutes();
 
-    // If it's exactly 22:00 (10 PM) and we haven't shown popup today
-    if (hours === 18 && minutes === 30 && !hasShownMealPopupToday) {
+    // Show popup at 22:00
+    if (hours === 22 && minutes === 0 && !hasShownMealPopupToday) {
       showMealPopup();
       hasShownMealPopupToday = true;
     }
 
-    // Reset after midnight for next day
+    // Reset for next day at 00:00
     if (hours === 0 && minutes === 0) {
       hasShownMealPopupToday = false;
     }
+
+    // Also check if it's 23:59 -> store daily CSV row & reset daily counters
+    if (hours === 23 && minutes === 59) {
+      // Wait a few seconds so meal answers can be recorded if user changed them at 22:00
+      setTimeout(() => {
+        // If we are still in a "sleepCandidate" chunk at midnight, finalize it 
+        // (in case they've begun inactivity before midnight).
+        if (sleepCandidateActive) {
+          finalizeSleepCandidate();
+        }
+        storeDailyDataInCSV();
+        resetDailyCounters();
+      }, 30000); // store after 30s (23:59:30)
+    }
+
   }, 60 * 1000);
 }
 
 function handleMealPopupSubmit() {
-  const breakfast = document.querySelector('input[name="breakfast"]:checked')?.value;
-  const lunch = document.querySelector('input[name="lunch"]:checked')?.value;
-  const dinner = document.querySelector('input[name="dinner"]:checked')?.value;
+  const breakfastVal = document.querySelector('input[name="breakfast"]:checked')?.value;
+  const lunchVal = document.querySelector('input[name="lunch"]:checked')?.value;
+  const dinnerVal = document.querySelector('input[name="dinner"]:checked')?.value;
 
-  // Store with a date key
-  const todayKey = new Date().toISOString().split('T')[0]; // e.g. "2025-02-06"
+  // Convert "yes" -> 1, "no" -> 0
+  const breakfast = (breakfastVal === 'yes') ? 1 : 0;
+  const lunch = (lunchVal === 'yes') ? 1 : 0;
+  const dinner = (dinnerVal === 'yes') ? 1 : 0;
+
+  // Store in localStorage with today's date as key
+  const todayKey = new Date().toISOString().split('T')[0];
   const mealData = { breakfast, lunch, dinner };
   localStorage.setItem(`mealData-${todayKey}`, JSON.stringify(mealData));
 
@@ -263,28 +261,107 @@ function handleMealPopupSubmit() {
 }
 
 /****************************************************
- * 6) Initialize (only relevant on tracker.html)
+ * 5) CSV Storage
+ ****************************************************/
+function storeDailyDataInCSV() {
+  let csvContent = localStorage.getItem('csvData') || '';
+
+  // If empty, prepend header
+  if (!csvContent) {
+    csvContent = 'Date,step count,Distance,sedentary hours,sleep hours,breakfast,lunch,dinner,age,gender,height,weight\n';
+  }
+
+  // Gather today's data
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2,'0');
+  const month = String(now.getMonth()+1).padStart(2,'0');
+  const year = now.getFullYear();
+  const dateStr = `${day}-${month}-${year}`;
+
+  // breakfast/lunch/dinner
+  const todayKey = now.toISOString().split('T')[0];
+  const mealDataStr = localStorage.getItem(`mealData-${todayKey}`);
+  let breakfast = 0, lunch = 0, dinner = 0;
+  if (mealDataStr) {
+    const mealObj = JSON.parse(mealDataStr);
+    breakfast = mealObj.breakfast || 0;
+    lunch = mealObj.lunch || 0;
+    dinner = mealObj.dinner || 0;
+  }
+
+  // Age, gender, height, weight
+  const userDataStr = localStorage.getItem('userData');
+  let age=0, gender='unknown', height=0, weight=0;
+  if (userDataStr) {
+    const userObj = JSON.parse(userDataStr);
+    age = userObj.age || 0;
+    gender = userObj.gender || 'unknown';
+    height = userObj.height || 0;
+    weight = userObj.weight || 0;
+  }
+
+  // Convert sedentary to hours
+  const sedentaryHours = (dailySedentaryMinutes / 60).toFixed(1);
+
+  // Build CSV line
+  // Date,stepCount,Distance,sedentaryHours,sleepHours,breakfast,lunch,dinner,age,gender,height,weight
+  const line = [
+    dateStr,
+    dailyStepCount,
+    dailyDistance.toFixed(2),
+    sedentaryHours,
+    dailySleepHours.toFixed(1),
+    breakfast,
+    lunch,
+    dinner,
+    age,
+    gender,
+    height,
+    weight
+  ].join(',');
+
+  csvContent += line + '\n';
+  localStorage.setItem('csvData', csvContent);
+
+  console.log('Daily data appended to CSV:\n', line);
+}
+
+function resetDailyCounters() {
+  dailyStepCount = 0;
+  dailyDistance = 0;
+  dailySedentaryMinutes = 0;
+  dailySleepHours = 0;
+
+  // Also reset any active inactivity chunk
+  sleepCandidateActive = false;
+  sleepCandidateMinutes = 0;
+
+  // Clear today's meal data
+  const todayKey = new Date().toISOString().split('T')[0];
+  localStorage.removeItem(`mealData-${todayKey}`);
+
+  updateUI();
+  saveDailyDataToStorage();
+}
+
+/****************************************************
+ * 6) Initialize
  ****************************************************/
 window.addEventListener('load', () => {
-  // If these elements do not exist, we are probably not on tracker.html.
-  // So let's only run tracker logic if they exist.
-  if (stepCountEl && distanceTraveledEl && sleepHoursEl) {
-    loadHealthDataFromStorage();
-
-    // Set up event listeners
-    if (startSleepBtn) startSleepBtn.addEventListener('click', startSleepTracking);
-    if (stopSleepBtn) stopSleepBtn.addEventListener('click', stopSleepTracking);
+  // If these elements do not exist, we're likely not on tracker.html
+  if (stepCountEl && distanceTraveledEl && sedentaryEl && sleepHoursEl) {
+    loadDailyDataFromStorage();
 
     // Ask for motion permission
     requestMotionPermission();
 
-    // Start checking sedentary status every minute (or your desired interval)
-    checkSedentaryIntervalId = setInterval(checkSedentaryStatus, 60 * 1000);
+    // Inactivity check every minute for sedentary + sleep detection
+    setInterval(checkInactivity, 60 * 1000);
 
-    // Set up nightly meal popup checks
+    // Setup meal popup schedule + daily CSV
     setupNightlyMealCheck();
 
-    // Popup "Submit" button
+    // Meal Popup "Submit" button
     const mealPopupSubmitBtn = document.getElementById('meal-popup-submit');
     if (mealPopupSubmitBtn) {
       mealPopupSubmitBtn.addEventListener('click', handleMealPopupSubmit);
