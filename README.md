@@ -7,13 +7,13 @@ The folder contains the script for the developed mobile application along with i
 
 The screenhot of the application is given below:
 
-![](images/environment.png)
+![Welcome Screen](images/screen-1.jpg)
 
 
-![](images/result.png)
+![User Details](images/screen-2.jpg)
 
 
-![](images/result.png)
+![Daily Activity](images/screen-3.jpg)
 
 
 ## Federated Learning
@@ -28,6 +28,6 @@ python client.py --client_id [enter id here]
 
 The structure of the develop MLP model is depicted in the following figure:
 
-![](images/result.png)
+![MLP Model](images/model.png)
 
 
