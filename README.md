@@ -7,7 +7,7 @@ The folder contains the script for the developed mobile application along with i
 
 The screenhot of the application is given below:
 
-![Welcome Screen](images/screen-1.jpg)
+<img src="images/screen-1.jpg" alt="Welcome Screen" width="50%" height="50%"/>
 
 
 ![User Details](images/screen-2.jpg)
