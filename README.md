@@ -7,13 +7,7 @@ The folder contains the script for the developed mobile application along with i
 
 The screenhot of the application is given below:
 
-<img src="images/screen-1.jpg" alt="Welcome Screen" width="30%" height="20%"/>  <img src="images/screen-2.jpg" alt="Welcome Screen" width="30%" height="20%"/>
-
-
-![User Details](images/screen-2.jpg)
-
-
-![Daily Activity](images/screen-3.jpg)
+<img src="images/screen-1.jpg" alt="Welcome Screen" width="30%" height="20%"/>  <img src="images/screen-2.jpg" alt="Welcome Screen" width="30%" height="20%"/> <img src="images/screen-3.jpg" alt="Welcome Screen" width="30%" height="20%"/>
 
 
 ## Federated Learning
